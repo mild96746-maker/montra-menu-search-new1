@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Montra Menu Search – Admin</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;background:#f5f6f8;color:#202124}
+header{background:linear-gradient(135deg,#111827,#374151);color:#fff;padding:22px 16px 18px;position:sticky;top:0;z-index:10}
+.wrap{max-width:1050px;margin:auto;padding:0 14px}
+h1{margin:0 0 5px;font-size:25px}.sub{font-size:13px;opacity:.8}
+.tabs{display:flex;gap:8px;margin-top:14px}
+button{border:0;border-radius:11px;padding:11px 14px;font-weight:700;cursor:pointer}
+.tab{background:#ffffff1c;color:#fff}.tab.active{background:#fff;color:#111827}
+main{padding:16px 0 40px}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:15px;margin-bottom:14px;box-shadow:0 2px 10px #00000008}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:12px;color:#666;display:block;margin-bottom:5px}
+input,select{width:100%;padding:12px;border:1px solid #d9dce1;border-radius:11px;font-size:16px;background:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.primary{background:#111827;color:#fff}.green{background:#177245;color:#fff}.red{background:#b42318;color:#fff}.gray{background:#eef0f3;color:#222}
+.search{margin-bottom:10px}
+.count{color:#666;font-size:13px;margin:8px 2px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:15px;padding:14px;margin:10px 0}
+.cardtop{display:flex;justify-content:space-between;gap:10px}.name{font-size:17px;font-weight:800}.en{font-size:13px;color:#666;margin-top:4px}.cat{font-size:12px;color:#777;margin-bottom:5px}.price{font-weight:800;margin-top:8px}
+.hidden{display:none}
+.note{font-size:13px;line-height:1.5;background:#fff7e6;border:1px solid #f0d28b;border-radius:12px;padding:12px;margin-bottom:12px}
+.empty{text-align:center;color:#777;padding:35px}
+@media(max-width:650px){.row{grid-template-columns:1fr}.cardtop{display:block}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+<h1>🍽️ Montra Menu Search – Admin</h1>
+<div class="sub">จัดการข้อมูลเมนูด้วยตัวเอง • ข้อมูลบันทึกในอุปกรณ์นี้</div>
+<div class="tabs">
+<button id="viewTab" class="tab active" onclick="switchMode('view')">🔎 ค้นหาเมนู</button>
+<button id="adminTab" class="tab" onclick="switchMode('admin')">⚙️ Admin</button>
+</div>
+</div>
+</header>
+
+<main class="wrap">
+<section id="viewMode">
+<div class="panel">
+<input id="search" class="search" placeholder="ค้นหา เช่น ปูนิ่ม / กุ้ง / Pizza / Salmon">
+<select id="cat"><option value="">📂 ทุกหมวดหมู่</option></select>
+<div class="count" id="viewCount"></div>
+</div>
+<div id="viewGrid"></div>
+</section>
+
+<section id="adminMode" class="hidden">
+<div class="note">
+โหมด Admin ใช้สำหรับแก้ไขข้อมูลบนอุปกรณ์นี้โดยตรง ข้อมูลที่บันทึกจะอยู่ในเบราว์เซอร์ของเครื่องนี้
+แนะนำให้กด “สำรองข้อมูล” เป็นระยะ เพื่อเก็บไฟล์ JSON ไว้
+</div>
+
+<div class="panel">
+<h3 style="margin-top:0">เพิ่ม / แก้ไขเมนู</h3>
+<input type="hidden" id="editIndex" value="-1">
+<div class="row">
+<div><label>ชื่อเมนูภาษาไทย</label><input id="th" placeholder="เช่น ปูนิ่มทอดกระเทียม"></div>
+<div><label>ชื่อเมนูภาษาอังกฤษ</label><input id="en" placeholder="เช่น Deep Fried Soft Shell Crab with Garlic"></div>
+<div><label>หมวดหมู่</label><input id="category" list="catList" placeholder="เช่น พิซซ่า — Pizza"><datalist id="catList"></datalist></div>
+<div><label>ราคา (ใส่ได้หลายราคา เช่น 180 / 220)</label><input id="price" placeholder="390"></div>
+</div>
+<div class="actions">
+<button class="primary" onclick="saveItem()">💾 บันทึกเมนู</button>
+<button class="gray" onclick="clearForm()">ล้างฟอร์ม</button>
+</div>
+</div>
+
+<div class="panel">
+<input id="adminSearch" placeholder="ค้นหาเมนูที่ต้องการแก้ไข...">
+<div class="count" id="adminCount"></div>
+<div id="adminGrid"></div>
+</div>
+
+<div class="panel">
+<h3 style="margin-top:0">สำรอง / กู้คืนข้อมูล</h3>
+<div class="actions">
+<button class="green" onclick="exportData()">⬇️ สำรองข้อมูล</button>
+<button class="gray" onclick="document.getElementById('importFile').click()">⬆️ กู้คืนข้อมูล</button>
+<button class="red" onclick="resetData()">↺ คืนค่าข้อมูลจาก PDF</button>
+<input id="importFile" type="file" accept=".json" class="hidden" onchange="importData(event)">
+</div>
+</div>
+</section>
+</main>
+
+<script>
+const originalItems = [{"cat":"เมนูแนะนำ","th":"ปูนิ่มทอดกระเทียม","en":"Deep Fried Soft Shell Crab with Garlic","price":"390"},{"cat":"เมนูแนะนำ","th":"ปูนิ่มผัดผงกะหรี่","en":"Stir Fried Soft Shell Crabs with Egg and Curry Sauce","price":"390"},{"cat":"เมนูแนะนำ","th":"ฉู่ฉี่กุ้ง","en":"Shrimp in Dried Red Curry","price":"260"},{"cat":"เมนูแนะนำ","th":"กระเพราแซลมอน","en":"Stir Fried Salmon with Holy Basil","price":"290"},{"cat":"เมนูแนะนำ","th":"ปูนิ่มผัดพริกเกลือ","en":"Stir Fried Soft Shell Crabs with Salt and Pepper","price":"390"},{"cat":"เมนูแนะนำ","th":"ปูนิ่มผัดพริกไทยดำ","en":"Stir Fried Soft Shell Crabs with Black Pepper Sauce","price":"390"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"ทอดมันปลา","en":"Homemade Thai Fish Cake","price":"180"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"ทอดมันกุ้ง","en":"Homemade Prawn Cake","price":"220"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"กุ้งชุบแป้งทอด","en":"Batter Fried Shrimp","price":"220"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"ปีกไก่ทอด","en":"Deep Fried Chicken Wing","price":"180"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"หมูแดดเดียวทอด","en":"Deep Fried Sun Dried Pork","price":"190"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"เนื้อแดดเดียวทอด","en":"Deep Fried Sun Dried Beef","price":"210"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"ลาบหมูทอดมนตรา","en":"Deep Fried Spicy Minced Pork","price":"200"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"เฟรนช์ฟรายส์","en":"French Fries","price":"140"},{"cat":"อาหารเรียกน้ำย่อย — Appetizers","th":"หมึกทอดกระเทียม","en":"Crisp Garlic Calamari","price":"280"},{"cat":"ยำ — Thai Spicy Salad","th":"ยำวุ้นเส้นทะเล","en":"Glass Noodle Pork and Seafood Spicy Salad (Thai Style)","price":"280"},{"cat":"ยำ — Thai Spicy Salad","th":"ยำตะไคร้กุ้งสด","en":"Prawn Lemongrass Spicy Salad (Thai Style)","price":"220"},{"cat":"ยำ — Thai Spicy Salad","th":"กุ้งแช่น้ำปลา","en":"Spicy Raw Prawn Salad served with Bitter Gourd (Thai Style)","price":"220"},{"cat":"ยำ — Thai Spicy Salad","th":"พล่ากุ้ง","en":"Prawn Spicy Salad with Roasted Rice Powder and Herbs (Thai Style)","price":"220"},{"cat":"ยำ — Thai Spicy Salad","th":"ยำสามกรอบ","en":"Crispy Fish Maw Spicy Salad (Thai Style)","price":"190"},{"cat":"ยำ — Thai Spicy Salad","th":"ลาบหมู","en":"Minced Pork or Chicken Spicy Salad (Thai Style)","price":"190"},{"cat":"ยำ — Thai Spicy Salad","th":"ส้มตำไทย","en":"Papaya Salad","price":"140"},{"cat":"ยำ — Thai Spicy Salad","th":"ส้มตำปูปลาร้า","en":"Papaya Salad with Salted Crab and Fermented Fish","price":"140"},{"cat":"ยำ — Thai Spicy Salad","th":"ยำเม็ดมะม่วงหิมพานต์","en":"Cashew Nut Spicy Salad","price":"160"},{"cat":"ยำ — Thai Spicy Salad","th":"เม็ดมะม่วงหิมพานต์คั่วเกลือ","en":"Cashew Nuts Roasted with Salt","price":"160"},{"cat":"ปลา — Fish","th":"ปลาคัง ลวกจิ้ม","en":"Steamed Mekong Giant Catfish","price":"240"},{"cat":"ปลา — Fish","th":"ปลาคัง ผัดฉ่า","en":"Spicy Stir-Fried Mekong Giant Catfish with Thai Herbs and Green Peppercorn","price":"260"},{"cat":"ปลา — Fish","th":"ปลาคังต้มยำ","en":"Tom Yum Mekong Giant Catfish","price":"260 / 380"},{"cat":"ปลา — Fish","th":"ปลากระพงนึ่งมะนาว","en":"Steamed Whole Seabass with Lime, Chili and Garlic","price":"450"},{"cat":"ปลา — Fish","th":"ปลากระพงทอดน้ำปลา","en":"Deep Fried Whole Seabass with Fish Sauce","price":"450"},{"cat":"ปลา — Fish","th":"ปลากระพงโบราณ","en":"Deep Fried Seabass Cook in Ancient Style","price":"450"},{"cat":"ผัด — Stir-Fried","th":"ไก่ผัดเม็ดมะม่วง","en":"Stir-Fried Chicken with Cashew Nuts and Dried Chilies","price":"190"},{"cat":"ผัด — Stir-Fried","th":"หมูป่าผัดเผ็ด","en":"Stir-Fried Wild Boar with Thai Red Curry Paste","price":"220"},{"cat":"ผัด — Stir-Fried","th":"ผัดฉ่าทะเล","en":"Stir-Fried Seafood with Fresh Chili and Thai Herbs","price":"250"},{"cat":"ผัด — Stir-Fried","th":"ทะเลผัดผงกะหรี่","en":"Stir-Fried Seafood with Curry Powder","price":"320"},{"cat":"ผัด — Stir-Fried","th":"ทะเลผัดไข่เค็ม","en":"Stir-Fried Seafood with Salted Egg","price":"320"},{"cat":"ผัด — Stir-Fried","th":"หมูทอดกระเทียม","en":"Stir-Fried Pork with Garlic and Fresh Peppercorns","price":"190"},{"cat":"ผัด — Stir-Fried","th":"ผัดพริกแกงหมูกรอบ","en":"Stir-Fried Crispy Pork Belly with Chilies Curry Paste","price":"190"},{"cat":"ผัด — Stir-Fried","th":"ผัดคะน้าปลาเค็ม (กับ)","en":"Stir-Fried Chinese Kale with Salted Fish","price":"160"},{"cat":"ผัด — Stir-Fried","th":"บล็อคโคลี่ผัดกุ้ง","en":"Stir-Fried Broccoli with Prawn in Oyster Sauce","price":"220"},{"cat":"ผัด — Stir-Fried","th":"ผัดผักรวมราดน้ำมันหอย หรือ หมูกรอบ","en":"Stir-Fried Mixed Vegetables with Oyster Sauce or Crispy Pork","price":"180 / 220"},{"cat":"ผัด — Stir-Fried","th":"ผัดผักบุ้งไฟแดงน้ำมันหอย หรือ หมูกรอบ","en":"Stir-Fried Morning Glory with Oyster Sauce or Crispy Pork","price":"160 / 220"},{"cat":"ผัด — Stir-Fried","th":"ไข่เจียวหมูสับ","en":"Thai Omelet with Minced Pork","price":"120"},{"cat":"ผัด — Stir-Fried","th":"ไข่เจียวกุ้งสับ","en":"Thai Omelet with Minced Prawn","price":"140"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"ต้มข่าไก่ ( หม้อไฟ)","en":"Chicken Soup in Coconut Milk (Big)","price":"280"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"ต้มยำกุ้ง (หม้อไฟ)","en":"Tom Yum Kung (Big)","price":"320"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงจืดเต้าหู้หมูสับ (หม้อไฟ)","en":"Pork Tofu and Chinese Cabbage Clear Sour","price":"280"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงส้มชะอมกุ้ง (หม้อไฟ)","en":"Prawn Soup Curry with Vegetable Omelet","price":"300"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงเขียวหวานไก่","en":"Chicken Green Curry","price":"190"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงเผ็ดเป็ดย่าง","en":"Duck Red Curry","price":"220"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงป่าไก่","en":"Chicken Jungle Curry","price":"190"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดไทยหมู ไก่","en":"Pad Thai: Pork, Chicken","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดซีอิ๊วหมู ไก่","en":"Stir-Fried Noodle with Pork, Chicken","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ราดหน้าหมู ไก่","en":"Flat Rice Noodle in Gravy Sauce with Pork, Chicken","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวอบสับปะรด","en":"Baked Rice in Pineapple","price":"240"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดคะน้าปลาเค็ม (ราดข้าว)","en":"Stir-Fried Chinese Kale Salted Fish Served with Rice","price":"160"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดกะเพราหมู ไก่ และไข่ดาว ราดข้าว","en":"Stir-Fried Holy Basil with Pork, Chicken Served with Rice","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดกะเพราหมูกรอบ เนื้อ ทะเล และไข่ดาว ราดข้าว","en":"Stir-Fried Holy Basil with Crispy Pork, Beef or Seafood Served with Rice","price":"220"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดหมู ไก่ หรือปลาเค็ม (เล็ก)","en":"Fried Rice with Pork, Chicken or Salted Fish (Small)","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดปู / ทะเล (เล็ก)","en":"Fried Rice with Crab or Seafood (Small)","price":"220"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดปลาแซลมอน (เล็ก)","en":"Fried Rice with Salmon (Small)","price":"190"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวต้มหมู","en":"Rice Porridge with Pork","price":"160"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดอเมริกัน","en":"American Fried Rice","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวสวย (จาน )","en":"Steamed Rice (Plate)","price":"20"},{"cat":"ซุป — Soup","th":"ซุปข้นเห็ด","en":"Mushroom Cream Soup Served with Garlic Bread","price":"120"},{"cat":"สปาเก็ตตี้ แซนด์วิช เบอร์เกอร์ — Spaghetti Sandwich Burger","th":"สปาเก็ตตี้ ซอสมะเขือเทศ","en":"Spaghetti Tomato Sauce","price":"200"},{"cat":"สปาเก็ตตี้ แซนด์วิช เบอร์เกอร์ — Spaghetti Sandwich Burger","th":"สปาเก็ตตี้ ซอสเนื้อ","en":"Spaghetti Meat Sauce","price":"220"},{"cat":"สปาเก็ตตี้ แซนด์วิช เบอร์เกอร์ — Spaghetti Sandwich Burger","th":"คาโบนาร่า (ซอสครีมข้น)","en":"Carbonara (Cream Sauce)","price":"220"},{"cat":"สปาเก็ตตี้ แซนด์วิช เบอร์เกอร์ — Spaghetti Sandwich Burger","th":"คลับแซนด์วิช","en":"Club Sandwich","price":"180"},{"cat":"สปาเก็ตตี้ แซนด์วิช เบอร์เกอร์ — Spaghetti Sandwich Burger","th":"เบอร์เกอร์หมู หรือ เนื้อ","en":"Pork or Beef Burger","price":"190"},{"cat":"สเต็ก — Steak","th":"สเต็กแซลมอน","en":"Grilled Salmon Steak","price":"380"},{"cat":"สเต็ก — Steak","th":"พอร์คช็อป","en":"Pork Chop","price":"320"},{"cat":"สเต็ก — Steak","th":"สเต็กไก่","en":"Grilled Chicken Breast","price":"280"},{"cat":"พิซซ่า — Pizza","th":"ซีฟู้ด","en":"Seafood","price":"350"},{"cat":"พิซซ่า — Pizza","th":"มาการิต้า","en":"Margarita","price":"280"},{"cat":"พิซซ่า — Pizza","th":"ฮาวายเอี้ยน","en":"Hawaiian","price":"280"},{"cat":"พิซซ่า — Pizza","th":"ผักโขมและชีส","en":"Spinach with Cheese","price":"280"},{"cat":"ของหวานมนตรา — Montra Sweetness","th":"ลูกตาลลอยแก้ว (ดูเมนูภาพมีระบุขนาด)","en":"Floating Glass Balls in Syrup","price":"60"},{"cat":"ของหวานมนตรา — Montra Sweetness","th":"บัวลอยงาดำ","en":"Black Sesame Glutinous Rice Ball in Sweet Ginger Soup","price":"60"},{"cat":"ของหวานมนตรา — Montra Sweetness","th":"ข้าวเหนียวมะม่วง (ตามฤดูกาล)","en":"Sticky Rice Served with Mango","price":"120"},{"cat":"ของหวานมนตรา — Montra Sweetness","th":"ผลไม้รวม (กลาง / ใหญ่)","en":"Seasonal Fresh Fruit (Medium, Big)","price":"140 / 260"},{"cat":"ของหวานมนตรา — Montra Sweetness","th":"ฮันนี่โทสต์","en":"Honey Toast","price":"230"},{"cat":"ของหวานมนตรา — Montra Sweetness","th":"มะยงชิดลอยแก้ว","en":"Chilled Marian Plum in Scented Syrup","price":"120"},{"cat":"เมนูมะม่วงและมะยงชิด","th":"ข้าวเหนียวมะม่วง (ตามฤดูกาล)","en":"Mango Sticky Rice","price":"120"},{"cat":"เมนูมะม่วงและมะยงชิด","th":"มะม่วงปั่น","en":"Mango Smoothie","price":"120"},{"cat":"เมนูมะม่วงและมะยงชิด","th":"มะยงชิดปั่น","en":"Marian Plum Smoothie","price":"120"},{"cat":"ยำ","th":"ยำวุ้นเส้นโบราณหมูสับ","en":"Traditional Spicy vermicelli noodle with minced pork.","price":"240"},{"cat":"ยำ","th":"ยำวุ้นเส้น หมูสับ-กุ้งสด","en":"Spicy glass noodle with Minced Pork and Shrimp Salad.","price":"280"},{"cat":"ยำ","th":"พล่าแซลมอน","en":"Salmon Spicy Salad with Roasted Rice Powder and Herbs (Thai Style)","price":"320"},{"cat":"ยำ","th":"หมูมะนาว","en":"Steamed Pork in Lime, Chili and Garlic","price":"190"},{"cat":"ผัด","th":"ไข่เจียว","en":"Thai Omelet","price":"100"},{"cat":"ปลา — Fish","th":"ปลาคังต้มยำ (หม้อไฟ)","en":"Tom Yum Mekong Giant Catfish","price":"380"},{"cat":"ผัด — Stir-Fried","th":"ผัดผักบุ้งไฟแดง-หมูกรอบ","en":"Stir-Fried Morning Glory with Crispy pork","price":"220"},{"cat":"ผัด — Stir-Fried","th":"ผัดคะน้าหมูกรอบ (กับ)","en":"Stir-Fried Chinese Kale with crispy pork","price":"220"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"ต้มข่าไก่ (ชาม)","en":"Chicken Soup in coconut milk (small)","price":"190"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"ต้มยำกุ้ง (ชาม)","en":"Tom Yum Kung (small)","price":"220"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงจืดเต้าหู้หมูสับ (ชาม)","en":"Pork Tofu and Cabbage Clear Clear soup","price":"180"},{"cat":"ต้มและแกง — Thai Soups and Curry","th":"แกงส้มชะอมกุ้ง (ชาม)","en":"Prawn Soup Curry with vegetables onelet","price":"220"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวต้มทะเล","en":"Rice Porridge with Seafood","price":"200"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวต้มปลากะพง","en":"Rice Porridge with Sea Bass","price":"200"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดไท กุ้ง หรือทะเล","en":"Pad Thai: Kung, Seafood","price":"220"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผัดซีอิ๊ว ทะเล","en":"Stir-Fried Noodle with Seafood in Soya Sauce","price":"220"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ราดหน้า ทะเล","en":"Flat Rice Noodle in Gravy Sauce with Seafood","price":"220"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ผักคะน้าหมูกรอบ (ราดข้าว)","en":"Stir-Fried Chinese Kale Crispy Pork Belly Served with Rice","price":"180"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดหมู ไก่ หรือปลาเค็ม (ใหญ่)","en":"Fried Rice with Pork, Chicken or Salted Fish (Big)","price":"320"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดปู / ทะเล (ใหญ่)","en":"Fried Rice with Crab or Seafood (Big)","price":"380"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวผัดปลาแซลมอน (ใหญ่)","en":"Fried Rice with Crab or Seafood (Big)","price":"380"},{"cat":"ข้าว และ ก๋วยเตี๋ยว — Rice and Noodle","th":"ข้าวสวย (โถ)","en":"Steamed Rice (Bowl)","price":"80"},{"cat":"คอกเทล","th":"มนตราพาราไดส์","en":"","price":"240"},{"cat":"คอกเทล","th":"บิสโทร่ ซันเซ็ต","en":"","price":"240"},{"cat":"คอกเทล","th":"พิน่าโคลาด้า","en":"","price":"240"},{"cat":"คอกเทล","th":"บิสโทร่ ลิชชี่","en":"","price":"240"},{"cat":"คอกเทล","th":"เรดมาการิต้าร์","en":"","price":"240"},{"cat":"คอกเทล","th":"บี-52","en":"","price":"220"},{"cat":"คอกเทล","th":"โมฮิโต้","en":"","price":"220"},{"cat":"คอกเทล","th":"ไหมไทย","en":"","price":"220"},{"cat":"คอกเทล","th":"บลูมาการิต้าร์","en":"","price":"220"},{"cat":"คอกเทล","th":"สตอเบอร์รี่ไดคิวลี่","en":"","price":"220"},{"cat":"คอกเทล","th":"สิงคโปร์ สลิง","en":"","price":"220"},{"cat":"คอกเทล","th":"พิ้งค์ เลดี้","en":"","price":"220"},{"cat":"คอกเทล","th":"ไอริส คอฟฟี่","en":"","price":"220"},{"cat":"คอกเทล","th":"ไวท์เลดี้","en":"","price":"220"},{"cat":"คอกเทล","th":"มาร์การิต้าร์","en":"","price":"220"},{"cat":"คอกเทล","th":"แบล็ครัสเซี่ยน","en":"","price":"220"},{"cat":"คอกเทล","th":"คาลัวมิลคค์","en":"","price":"220"},{"cat":"คอกเทล","th":"เบอรี่ เมล่อน","en":"","price":"220"},{"cat":"ม็อคเทล","th":"เวอร์จิ้นโมฮิโต้","en":"","price":"140"},{"cat":"ม็อคเทล","th":"ซินเดอเรลล่า","en":"","price":"140"},{"cat":"ม็อคเทล","th":"มนตราฮอลิเดย์","en":"","price":"140"},{"cat":"ม็อคเทล","th":"ฟรุ๊ตพั้นซ์","en":"","price":"140"},{"cat":"ม็อคเทล","th":"เฟริสคิส","en":"","price":"140"},{"cat":"เหล้าปั่น","th":"บลูริเวอร์","en":"","price":"350"},{"cat":"เหล้าปั่น","th":"ไวท์บิสโทร่","en":"","price":"350"}];
+let items = JSON.parse(localStorage.getItem('montraMenuData_20261002') || 'null') || JSON.parse(JSON.stringify(originalItems));
+
+function persist(){localStorage.setItem('montraMenuData_20261002',JSON.stringify(items));}
+function cats(){
+  return [...new Set(items.map(x=>x.cat))].sort();
+}
+function setupCats(){
+  const select=document.getElementById('cat');
+  const current=select.value;
+  select.innerHTML='<option value="">📂 ทุกหมวดหมู่</option>'+cats().map(c=>`<option>${esc(c)}</option>`).join('');
+  if(cats().includes(current)) select.value=current;
+  document.getElementById('catList').innerHTML=cats().map(c=>`<option value="${esc(c)}"></option>`).join('');
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+
+function switchMode(mode){
+  const view=mode==='view';
+  document.getElementById('viewMode').classList.toggle('hidden',!view);
+  document.getElementById('adminMode').classList.toggle('hidden',view);
+  document.getElementById('viewTab').classList.toggle('active',view);
+  document.getElementById('adminTab').classList.toggle('active',!view);
+  if(!view) renderAdmin();
+  else renderView();
+}
+
+function renderView(){
+  setupCats();
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const c=document.getElementById('cat').value;
+  const out=items.filter(x=>(!c||x.cat===c)&&(!q||(x.th+' '+x.en).toLowerCase().includes(q)));
+  document.getElementById('viewCount').textContent=out.length+' รายการ';
+  document.getElementById('viewGrid').innerHTML=out.length?out.map(x=>`
+    <article class="card"><div class="cat">${esc(x.cat)}</div><div class="name">${esc(x.th)}</div>
+    <div class="en">${esc(x.en)}</div><div class="price">฿${esc(x.price)}</div></article>`).join('')
+    :'<div class="empty">ไม่พบเมนูที่ค้นหา</div>';
+}
+
+function renderAdmin(){
+  setupCats();
+  const q=document.getElementById('adminSearch').value.trim().toLowerCase();
+  const out=items.map((x,i)=>({...x,i})).filter(x=>(x.th+' '+x.en+' '+x.cat).toLowerCase().includes(q));
+  document.getElementById('adminCount').textContent=out.length+' รายการ';
+  document.getElementById('adminGrid').innerHTML=out.length?out.map(x=>`
+    <article class="card"><div class="cardtop"><div>
+    <div class="cat">${esc(x.cat)}</div><div class="name">${esc(x.th)}</div><div class="en">${esc(x.en)}</div><div class="price">฿${esc(x.price)}</div>
+    </div><div class="actions">
+    <button class="gray" onclick="editItem(${x.i})">✏️ แก้ไข</button>
+    <button class="red" onclick="deleteItem(${x.i})">🗑️ ลบ</button></div></div></article>`).join('')
+    :'<div class="empty">ไม่พบเมนู</div>';
+}
+
+function saveItem(){
+  const th=document.getElementById('th').value.trim(), en=document.getElementById('en').value.trim();
+  const cat=document.getElementById('category').value.trim(), price=document.getElementById('price').value.trim();
+  if(!th||!en||!cat||!price){alert('กรุณากรอกข้อมูลให้ครบ');return;}
+  const idx=Number(document.getElementById('editIndex').value);
+  const obj={cat,th,en,price};
+  if(idx>=0) items[idx]=obj; else items.push(obj);
+  persist(); clearForm(); renderAdmin(); renderView();
+  alert(idx>=0?'แก้ไขเมนูเรียบร้อยแล้ว':'เพิ่มเมนูเรียบร้อยแล้ว');
+}
+function editItem(i){
+  const x=items[i];
+  document.getElementById('editIndex').value=i;
+  document.getElementById('th').value=x.th;
+  document.getElementById('en').value=x.en;
+  document.getElementById('category').value=x.cat;
+  document.getElementById('price').value=x.price;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function clearForm(){
+  document.getElementById('editIndex').value=-1;
+  ['th','en','category','price'].forEach(id=>document.getElementById(id).value='');
+}
+function deleteItem(i){
+  if(confirm('ต้องการลบเมนูนี้ใช่หรือไม่?')){
+    items.splice(i,1);persist();renderAdmin();renderView();
+  }
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='Montra_Menu_Backup.json';a.click();URL.revokeObjectURL(a.href);
+}
+function importData(e){
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();r.onload=()=>{
+    try{
+      const x=JSON.parse(r.result);
+      if(!Array.isArray(x))throw Error();
+      items=x;persist();setupCats();renderAdmin();renderView();alert('กู้คืนข้อมูลเรียบร้อยแล้ว');
+    }catch(err){alert('ไฟล์ JSON ไม่ถูกต้อง');}
+  };r.readAsText(file);e.target.value='';
+}
+function resetData(){
+  if(confirm('คืนค่าข้อมูลเริ่มต้นจาก PDF? การแก้ไขที่บันทึกไว้ในเครื่องนี้จะถูกแทนที่')){
+    items=JSON.parse(JSON.stringify(originalItems));persist();renderAdmin();renderView();
+  }
+}
+document.getElementById('search').addEventListener('input',renderView);
+document.getElementById('cat').addEventListener('change',renderView);
+document.getElementById('adminSearch').addEventListener('input',renderAdmin);
+setupCats();renderView();
+</script>
+</body></html>
